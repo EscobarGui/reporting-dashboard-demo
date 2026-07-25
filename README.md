@@ -13,11 +13,11 @@ Single-file interactive dashboard modeled on a production reporting system I bui
 
 ## Run it
 
-Open `dashboard.html` directly in a browser — no build step, no server required. All data is generated client-side (seeded, so it's stable across reloads) as stand-in sample data; in production this would be replaced with a real data source (database query, API, or export).
+Open `dashboard.html` directly in a browser, no build step, no server required. All data is generated client-side (seeded, so it's stable across reloads) as stand-in sample data; in production this would be replaced with a real data source (database query, API, or export).
 
 ## Why this matters for a client
 
-Most small and mid-size teams build their "dashboard" by hand in a spreadsheet every day: pulling numbers from different tools, formatting them, and emailing them around. This shows what that process looks like once it's automated — same data, same departments, but nobody manually compiling it anymore.
+Most small and mid-size teams build their "dashboard" by hand in a spreadsheet every day: pulling numbers from different tools, formatting them, and emailing them around. This shows what that process looks like once it's automated: same data, same departments, but nobody manually compiling it anymore.
 
 ## Adapting this for a real client
 
