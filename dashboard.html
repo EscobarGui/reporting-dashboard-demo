@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daily Operations Report — Automated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink: #14181F;
+    --ink-2: #1D222C;
+    --paper: #FAFAF7;
+    --card: #FFFFFF;
+    --text: #2B2F38;
+    --text-dim: #6B7280;
+    --line: #E7E5DE;
+    --teal: #1C8C7D;
+    --teal-soft: #E4F3F0;
+    --amber: #E2A33D;
+    --amber-soft: #FBF0DD;
+    --coral: #D95F4B;
+    --coral-soft: #FBE9E5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  header{
+    background:var(--ink);
+    color:#F2F1EC;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  header .brand{display:flex; flex-direction:column; gap:2px;}
+  header .brand .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    color:var(--teal);
+    text-transform:uppercase;
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+    font-weight:600;
+  }
+  .gen-strip{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--ink-2);
+    border:1px solid #2A3140;
+    border-radius:10px;
+    padding:10px 16px;
+  }
+  .gen-strip .dot{width:8px;height:8px;border-radius:50%;background:var(--teal); box-shadow:0 0 0 4px rgba(28,140,125,0.25);}
+  .gen-strip .label{font-size:12px; color:#9AA3AF;}
+  .gen-strip .value{font-family:'JetBrains Mono',monospace; font-size:13px; color:#F2F1EC;}
+  button#regen{
+    background:var(--teal);
+    color:#0A1613;
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button#regen:hover{filter:brightness(1.08);}
+
+  main{max-width:1180px; margin:0 auto; padding:28px;}
+
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:24px;
+  }
+  .kpi{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+  }
+  .kpi .label{font-size:12px; color:var(--text-dim); margin-bottom:8px;}
+  .kpi .num{font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700;}
+  .kpi .sub{font-size:12px; margin-top:6px; color:var(--text-dim);}
+  .kpi .sub.good{color:var(--teal);}
+  .kpi .sub.warn{color:var(--amber);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+  }
+  .panel h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    margin:0 0 4px 0;
+  }
+  .panel p.hint{margin:0 0 16px 0; font-size:12px; color:var(--text-dim);}
+
+  .dept-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  .dept-list li{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border-radius:8px; background:var(--paper);
+    border:1px solid var(--line);
+  }
+  .dept-list .name{font-size:13px; font-weight:600;}
+  .dept-list .status{display:flex; align-items:center; gap:8px;}
+  .status-dot{width:9px;height:9px;border-radius:50%;}
+  .status-dot.ok{background:var(--teal);}
+  .status-dot.warn{background:var(--amber);}
+  .status-dot.bad{background:var(--coral);}
+  .dept-list .sla{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim);}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--text-dim); font-weight:600; padding:10px 12px; border-bottom:1px solid var(--line);
+  }
+  td{padding:10px 12px; border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .pill{
+    display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600;
+  }
+  .pill.ok{background:var(--teal-soft); color:var(--teal);}
+  .pill.warn{background:var(--amber-soft); color:#95681E;}
+  .pill.bad{background:var(--coral-soft); color:var(--coral);}
+
+  .compare-strip{
+    background:var(--ink);
+    color:#F2F1EC;
+    border-radius:12px;
+    padding:22px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .compare-strip .side{display:flex; align-items:center; gap:16px;}
+  .compare-strip .num{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;}
+  .compare-strip .num.teal{color:var(--teal);}
+  .compare-strip .num.dim{color:#9AA3AF; text-decoration:line-through; text-decoration-color:#5A6270;}
+  .compare-strip .cap{font-size:11px; color:#9AA3AF; margin-top:2px;}
+  .arrow{color:#5A6270; font-size:20px;}
+
+  @media (max-width:820px){
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="eyebrow">Ops Reporting · Automated</span>
+    <h1>Daily Department Performance Report</h1>
+  </div>
+  <div class="gen-strip">
+    <span class="dot"></span>
+    <span class="label">Generated</span>
+    <span class="value mono" id="gen-time">—</span>
+    <button id="regen">Regenerate report</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Tasks completed by department — today</h2>
+      <p class="hint">Auto-pulled from the operations log, no manual entry required.</p>
+      <canvas id="barChart" height="180"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Department status</h2>
+      <p class="hint">SLA against 95% target</p>
+      <ul class="dept-list" id="dept-list"></ul>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <h2>SLA trend — last 14 days</h2>
+    <p class="hint">Average across all departments</p>
+    <canvas id="lineChart" height="90"></canvas>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <h2>Detail — today</h2>
+    <p class="hint">The table a manager used to build by hand, department by department</p>
+    <table>
+      <thead>
+        <tr><th>Department</th><th>Completed</th><th>Pending</th><th>Avg handling time</th><th>SLA</th><th>Status</th></tr>
+      </thead>
+      <tbody id="detail-body"></tbody>
+    </table>
+  </div>
+
+  <div class="compare-strip">
+    <div class="side">
+      <div>
+        <div class="num teal" id="auto-time">0.00s</div>
+        <div class="cap">Automated generation time</div>
+      </div>
+      <span class="arrow">vs</span>
+      <div>
+        <div class="num dim">~3h</div>
+        <div class="cap">Manual compilation, per report</div>
+      </div>
+    </div>
+    <div class="cap" style="max-width:260px; text-align:right;">Same data sources, same departments — the only thing that changed is who does the compiling.</div>
+  </div>
+
+</main>
+
+<script>
+// ---------- seeded PRNG so the "sample data" is stable across reloads ----------
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20260714);
+
+const departments = ["Customer Support","Claims Processing","Sales Operations","Logistics","Finance"];
+const days = 14;
+
+function genSeries(){
+  const data = {};
+  departments.forEach((dept, di) => {
+    const base = 78 + di * 3;
+    data[dept] = Array.from({length: days}, (_, d) => {
+      const wobble = (rand() - 0.5) * 10;
+      const trend = d * (di === 1 ? -0.6 : 0.15); // Claims Processing drifting down
+      return Math.max(60, Math.min(99, Math.round(base + wobble + trend)));
+    });
+  });
+  return data;
+}
+const slaSeries = genSeries();
+
+function todaySnapshot(){
+  return departments.map((dept, di) => {
+    const sla = slaSeries[dept][days - 1];
+    const completed = Math.round(140 + rand() * 60 - di * 8);
+    const pending = Math.round(8 + rand() * 20 + (sla < 90 ? 10 : 0));
+    const handling = (4 + rand() * 3 + (sla < 90 ? 1.5 : 0)).toFixed(1);
+    return { dept, sla, completed, pending, handling };
+  });
+}
+
+function statusFor(sla){
+  if (sla >= 95) return { key:"ok", label:"On target" };
+  if (sla >= 88) return { key:"warn", label:"Watch" };
+  return { key:"bad", label:"Breach" };
+}
+
+function renderKPIs(snapshot){
+  const totalCompleted = snapshot.reduce((s,r)=>s+r.completed,0);
+  const avgSla = (snapshot.reduce((s,r)=>s+r.sla,0)/snapshot.length).toFixed(1);
+  const worst = [...snapshot].sort((a,b)=>a.sla-b.sla)[0];
+  const totalPending = snapshot.reduce((s,r)=>s+r.pending,0);
+
+  const kpis = [
+    { label:"Tasks completed today", num: totalCompleted, sub:`Across ${snapshot.length} departments`, cls:"" },
+    { label:"Average SLA", num: avgSla+"%", sub: avgSla >= 95 ? "Above 95% target" : "Below 95% target", cls: avgSla >= 95 ? "good":"warn" },
+    { label:"Needs attention", num: worst.dept, sub: `SLA at ${worst.sla}%`, cls:"warn" },
+    { label:"Open items", num: totalPending, sub:"Pending across all queues", cls:"" },
+  ];
+
+  document.getElementById("kpi-row").innerHTML = kpis.map(k => `
+    <div class="kpi">
+      <div class="label">${k.label}</div>
+      <div class="num">${k.num}</div>
+      <div class="sub ${k.cls}">${k.sub}</div>
+    </div>
+  `).join("");
+}
+
+function renderDeptList(snapshot){
+  document.getElementById("dept-list").innerHTML = snapshot
+    .slice()
+    .sort((a,b)=>a.sla-b.sla)
+    .map(r=>{
+      const s = statusFor(r.sla);
+      return `<li>
+        <span class="name">${r.dept}</span>
+        <span class="status">
+          <span class="sla">${r.sla}%</span>
+          <span class="status-dot ${s.key}"></span>
+        </span>
+      </li>`;
+    }).join("");
+}
+
+function renderTable(snapshot){
+  document.getElementById("detail-body").innerHTML = snapshot.map(r=>{
+    const s = statusFor(r.sla);
+    return `<tr>
+      <td>${r.dept}</td>
+      <td>${r.completed}</td>
+      <td>${r.pending}</td>
+      <td>${r.handling} min</td>
+      <td>${r.sla}%</td>
+      <td><span class="pill ${s.key}">${s.label}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+let barChart, lineChart;
+function renderCharts(snapshot){
+  const barCtx = document.getElementById("barChart");
+  const lineCtx = document.getElementById("lineChart");
+
+  const barData = {
+    labels: snapshot.map(r=>r.dept),
+    datasets: [{
+      label: "Tasks completed",
+      data: snapshot.map(r=>r.completed),
+      backgroundColor: "#1C8C7D",
+      borderRadius: 6,
+      maxBarThickness: 46,
+    }]
+  };
+
+  const avgLine = Array.from({length: days}, (_,d) =>
+    Math.round(departments.reduce((s,dep)=>s+slaSeries[dep][d],0)/departments.length)
+  );
+
+  const lineData = {
+    labels: Array.from({length: days}, (_,i)=>`D-${days-1-i}`),
+    datasets: [{
+      label: "Avg SLA %",
+      data: avgLine,
+      borderColor: "#1C8C7D",
+      backgroundColor: "rgba(28,140,125,0.08)",
+      fill: true,
+      tension: 0.35,
+      pointRadius: 0,
+      borderWidth: 2,
+    }]
+  };
+
+  const commonOpts = {
+    responsive:true,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ grid:{ display:false }, ticks:{ font:{ family:"Inter", size:11 }, color:"#6B7280" } },
+      y:{ grid:{ color:"#EFEDE6" }, ticks:{ font:{ family:"Inter", size:11 }, color:"#6B7280" } }
+    }
+  };
+
+  if (barChart) barChart.destroy();
+  if (lineChart) lineChart.destroy();
+
+  barChart = new Chart(barCtx, { type:"bar", data: barData, options: commonOpts });
+  lineChart = new Chart(lineCtx, { type:"line", data: lineData, options: { ...commonOpts, scales:{...commonOpts.scales, y:{...commonOpts.scales.y, suggestedMin:60, suggestedMax:100}} } });
+}
+
+function stampGenTime(){
+  const now = new Date();
+  document.getElementById("gen-time").textContent = now.toLocaleString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+}
+
+function generateReport(){
+  const t0 = performance.now();
+  const snapshot = todaySnapshot();
+  renderKPIs(snapshot);
+  renderDeptList(snapshot);
+  renderTable(snapshot);
+  renderCharts(snapshot);
+  stampGenTime();
+  const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+  document.getElementById("auto-time").textContent = elapsed + "s";
+}
+
+document.getElementById("regen").addEventListener("click", generateReport);
+generateReport();
+</script>
+
+</body>
+</html>
