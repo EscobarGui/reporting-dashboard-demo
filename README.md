@@ -6,7 +6,7 @@ Single-file interactive dashboard modeled on a production reporting system I bui
 
 ## What it does
 
-- Pulls together department-level KPIs (tasks completed, SLA %, pending items, average handling time) into a single view — the exact numbers a manager previously had to compile by hand from separate sources.
+- Pulls together department-level KPIs (tasks completed, SLA %, pending items, average handling time) into a single view, the exact numbers a manager previously had to compile by hand from separate sources.
 - Highlights which department needs attention based on SLA target, instead of someone scanning a spreadsheet to notice it.
 - Shows a 14-day SLA trend so a dip is visible immediately, not just in hindsight.
 - "Regenerate report" button demonstrates the automated generation running client-side, with the elapsed time shown live against the ~3 hour manual baseline.
